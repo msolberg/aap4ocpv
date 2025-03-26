@@ -7,9 +7,6 @@ metadata:
     vm.kubevirt.io/template.namespace: openshift
     vm.kubevirt.io/template.revision: '1'
     vm.kubevirt.io/template.version: v0.29.4
-    {% for label in vm_labels %}
-    {{ label }}
-    {% endfor %}
   name: {{ vm_name }}
   namespace: {{ project_name }}
 spec:
