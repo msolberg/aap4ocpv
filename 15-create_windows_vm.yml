@@ -8,7 +8,10 @@
     vm_running: true
     vm_cpus: 4
     vm_mem: 8Gi
-    # TODO: MAC ADDRESS/NETWORKS
+    vm_networks:
+      - nic_name: nic1
+        network_name: baremetal-network
+        network_type: bridge
 
   tasks:
     - name: Create new Windows VM

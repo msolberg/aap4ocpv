@@ -96,9 +96,11 @@ spec:
               name: tablet
               type: tablet
           interfaces:
-            - masquerade: {}
+            {% for network in vm_networks %}
+            - {{ network.network_type }}: {}
               model: e1000e
-              name: default
+              name: {{ network.nic_name }}
+            {% endfor %}
         features:
           acpi: {}
           apic: {}
@@ -128,8 +130,17 @@ spec:
           guest: {{ vm_mem }}
         resources: {}
       networks:
-        - name: default
+        {% for network in vm_networks %}
+        {% if network.network_type == 'masquerade' %}
+        - name: {{ network.network_name }}
           pod: {}
+        {% endif %}
+        {% if network.network_type == 'bridge' %}
+        - multus:
+            networkName: {{ network.network_name }}
+          name: {{ network.nic_name }}
+        {% endif %}
+        {% endfor %}
       terminationGracePeriodSeconds: 3600
       volumes:
         - containerDisk:
