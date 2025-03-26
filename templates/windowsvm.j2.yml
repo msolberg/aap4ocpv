@@ -96,15 +96,15 @@ spec:
               name: tablet
               type: tablet
           interfaces:
-            {% for network in vm_networks %}
-            {% if network.network_type == 'bridge' %}
+            {% for network1 in vm_networks %}
+            {% if network1.network_type == 'bridge' %}
             - bridge: {}
             {% endif %}
-            {% if network.network_type == 'masquerade' %}
+            {% if network1.network_type == 'masquerade' %}
             - masquerade: {}
             {% endif %}
               model: e1000e
-              name: {{ network.nic_name }}
+              name: {{ network1.nic_name }}
             {% endfor %}
         features:
           acpi: {}
@@ -135,15 +135,15 @@ spec:
           guest: {{ vm_mem }}
         resources: {}
       networks:
-        {% for network in vm_networks %}
-        {% if network.network_type == 'masquerade' %}
-        - name: {{ network.network_name }}
+        {% for network2 in vm_networks %}
+        {% if network2.network_type == 'masquerade' %}
+        - name: {{ network2.network_name }}
           pod: {}
         {% endif %}
-        {% if network.network_type == 'bridge' %}
+        {% if network2.network_type == 'bridge' %}
         - multus:
-            networkName: {{ network.network_name }}
-          name: {{ network.nic_name }}
+            networkName: {{ network2.network_name }}
+          name: {{ network2.nic_name }}
         {% endif %}
         {% endfor %}
       terminationGracePeriodSeconds: 3600
