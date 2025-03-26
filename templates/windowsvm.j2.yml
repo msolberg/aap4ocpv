@@ -97,7 +97,12 @@ spec:
               type: tablet
           interfaces:
             {% for network in vm_networks %}
-            - {{ network.network_type }}: {}
+            {% if network.network_type == 'bridge' %}
+            - bridge: {}
+            {% endif %}
+            {% if network.network_type == 'masquerade' %}
+            - masquerade: {}
+            {% endif %}
               model: e1000e
               name: {{ network.nic_name }}
             {% endfor %}
