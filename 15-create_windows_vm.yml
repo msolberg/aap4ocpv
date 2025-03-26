@@ -8,6 +8,9 @@
     vm_running: true
     vm_cpus: 4
     vm_mem: 8Gi
+    vm_labels:
+      os: windows
+      backup: true
     # TODO: MAC ADDRESS/NETWORKS
 
   tasks:
