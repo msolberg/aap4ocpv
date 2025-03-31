@@ -7,6 +7,9 @@ metadata:
     vm.kubevirt.io/template.namespace: openshift
     vm.kubevirt.io/template.revision: '1'
     vm.kubevirt.io/template.version: v0.29.4
+    {%+ for label in vm_labels -%}
+    {{ label }}
+  {% endfor -%}
   name: {{ vm_name }}
   namespace: {{ project_name }}
 spec:
@@ -58,6 +61,9 @@ spec:
       labels:
         kubevirt.io/domain: {{ vm_name }}
         kubevirt.io/size: medium
+        {%+ for label in vm_labels -%}
+        {{ label }}
+      {% endfor -%}
     spec:
       architecture: amd64
       domain:
@@ -96,16 +102,9 @@ spec:
               name: tablet
               type: tablet
           interfaces:
-            {% for network1 in vm_networks %}
-            {% if network1.network_type == 'bridge' %}
             - bridge: {}
-            {% endif %}
-            {% if network1.network_type == 'masquerade' %}
-            - masquerade: {}
-            {% endif %}
               model: e1000e
-              name: {{ network1.nic_name }}
-            {% endfor %}
+              name: nic1
         features:
           acpi: {}
           apic: {}
@@ -135,17 +134,11 @@ spec:
           guest: {{ vm_mem }}
         resources: {}
       networks:
-        {% for network2 in vm_networks %}
-        {% if network2.network_type == 'masquerade' %}
-        - name: {{ network2.network_name }}
-          pod: {}
-        {% endif %}
-        {% if network2.network_type == 'bridge' %}
+        {%+ for network in vm_networks -%}
         - multus:
-            networkName: {{ network2.network_name }}
-          name: {{ network2.nic_name }}
-        {% endif %}
-        {% endfor %}
+            networkName: "{{ network.network_name }}"
+          name: "{{ network.nic_name }}"
+      {% endfor -%}
       terminationGracePeriodSeconds: 3600
       volumes:
         - containerDisk:

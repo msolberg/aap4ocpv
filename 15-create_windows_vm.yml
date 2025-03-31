@@ -5,16 +5,35 @@
     vm_name: winders
     vm_iso: install-disk
     vm_storage_class: windows-vms
-    vm_running: true
+    vm_running: false
     vm_cpus: 4
     vm_mem: 8Gi
     vm_networks:
       - nic_name: nic1
         network_name: baremetal-network
         network_type: bridge
+    vm_labels:
+      - "backup: true"
 
   tasks:
+    - name: Debug the template
+      template:
+        src: templates/windowsvm.j2.yml
+        dest: "/home/msolberg/git/aap4ocpv/template_output.txt"
+        
     - name: Create new Windows VM
       redhat.openshift.k8s:
         state: present
         template: templates/windowsvm.j2.yml
+
+    - name: VM info
+      kubernetes.core.k8s_info:
+        api_version: kubevirt.io/v1
+        kind: VirtualMachine
+        label_selectors:
+          - app = "{{ vm_name }}"
+      register: new_vm
+    
+    - name: print info
+      debug:
+        var: new_vm
