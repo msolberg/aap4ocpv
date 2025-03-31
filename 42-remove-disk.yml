@@ -1,0 +1,58 @@
+- name: Remove a volume from a VM
+  hosts: localhost
+  vars:
+    project_name: aap
+    vm_name: winders
+
+    volume_to_remove: installation-cdrom
+
+  tasks:
+    - name: Get VM Info
+      kubernetes.core.k8s_info:
+        api_version: kubevirt.io/v1
+        kind: VirtualMachine
+        name: "{{ vm_name }}"
+        namespace: "{{ project_name }}"
+      register: vm_info
+
+    - name: Dump data
+      debug:
+        msg: "{{ vm_info.resources[0].spec }}"
+
+    - name: Remove volume
+      ansible.builtin.set_fact:
+        vmVolumes: "{{ vmVolumes | default([]) + [item] }}"
+      loop: "{{ vm_info.resources[0].spec.template.spec.volumes }}"
+      when: item.name != volume_to_remove
+
+    - name: Remove dataVolumeTemplate
+      ansible.builtin.set_fact:
+        vmDataVolumeTemplates: "{{ vmDataVolumeTemplates | default([]) + [item] }}"
+      loop: "{{ vm_info.resources[0].spec.dataVolumeTemplates }}"
+      when: "{{ item.metadata.name != vm_name + '-' + volume_to_remove }}"
+
+    - name: Remove disk
+      ansible.builtin.set_fact:
+        vmDisks: "{{ vmDisks | default([]) + [item] }}"
+      loop: "{{ vm_info.resources[0].spec.template.spec.domain.devices.disks }}"
+      when: item.name != volume_to_remove
+
+    - name: Update VM
+      kubernetes.core.k8s:
+        state: present
+        api_version: kubevirt.io/v1
+        kind: VirtualMachine
+        name: "{{ vm_name }}"
+        namespace: "{{ project_name }}"
+        merge_type:
+          - strategic-merge
+          - merge
+        definition:
+          spec:
+            dataVolumeTemplates: "{{ vmDataVolumeTemplates }}"
+            template:
+              spec:
+                volumes: "{{ vmVolumes }}"
+                domain:
+                  devices:
+                    disks: "{{ vmDisks }}"
