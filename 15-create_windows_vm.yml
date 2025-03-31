@@ -13,16 +13,16 @@
         network_name: baremetal-network
         network_type: bridge
     vm_labels:
-      - "backup: true"
+      backup: "true"
 
   tasks:
     - name: Debug the template
       template:
         src: templates/windowsvm.j2.yml
-        dest: "/home/msolberg/git/aap4ocpv/template_output.txt"
+        dest: "/tmp/template_output.txt"
         
     - name: Create new Windows VM
-      redhat.openshift.k8s:
+      kubernetes.core.k8s:
         state: present
         template: templates/windowsvm.j2.yml
 
@@ -30,10 +30,27 @@
       kubernetes.core.k8s_info:
         api_version: kubevirt.io/v1
         kind: VirtualMachine
+        namespace: "{{ project_name }}"
         label_selectors:
-          - app = "{{ vm_name }}"
+          - "app = {{ vm_name }}"
       register: new_vm
+      until: new_vm.resources | length > 0
+      retries: 10
     
     - name: print info
       debug:
         var: new_vm
+        
+    - name: Start Windows VM
+      kubernetes.core.k8s:
+        state: present
+        api_version: kubevirt.io/v1
+        kind: VirtualMachine
+        name: "{{ vm_name }}"
+        namespace: "{{ project_name }}"
+        merge_type:
+          - strategic-merge
+          - merge
+        definition:
+          spec:
+            running: true

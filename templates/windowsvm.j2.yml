@@ -7,9 +7,9 @@ metadata:
     vm.kubevirt.io/template.namespace: openshift
     vm.kubevirt.io/template.revision: '1'
     vm.kubevirt.io/template.version: v0.29.4
-    {%+ for label in vm_labels -%}
-    {{ label }}
-  {% endfor -%}
+{% for label in (vm_labels | dict2items ) %}
+    {{ label.key }}: "{{ label.value }}"
+{% endfor %}
   name: {{ vm_name }}
   namespace: {{ project_name }}
 spec:
@@ -61,9 +61,9 @@ spec:
       labels:
         kubevirt.io/domain: {{ vm_name }}
         kubevirt.io/size: medium
-        {%+ for label in vm_labels -%}
-        {{ label }}
-      {% endfor -%}
+{% for label in (vm_labels | dict2items ) %}
+        {{ label.key }}: "{{ label.value }}"
+{% endfor %}
     spec:
       architecture: amd64
       domain:
