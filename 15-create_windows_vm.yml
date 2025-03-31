@@ -54,3 +54,29 @@
         definition:
           spec:
             running: true
+
+    - name: Stop a Windows VM
+      kubernetes.core.k8s:
+        state: present
+        api_version: kubevirt.io/v1
+        kind: VirtualMachine
+        name: "{{ vm_name }}"
+        namespace: "{{ project_name }}"
+        merge_type:
+          - strategic-merge
+          - merge
+        definition:
+          spec:
+            running: false
+
+    - name: Wait for the Windows VM to stop
+      kubernetes.core.k8s_info:
+        state: present
+        api_version: kubevirt.io/v1
+        kind: VirtualMachine
+        name: "{{ vm_name }}"
+        namespace: "{{ project_name }}"
+      register: vm_info
+      until: vm_info.resources[0].status.printableStatus == Stopped
+      retries: 30
+      delay: 10
